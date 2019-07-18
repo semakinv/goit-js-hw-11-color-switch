@@ -1,118 +1,65 @@
-import './styles.css';
-function CountdownTimer(selector, targetDate) {
-  //Создание шаблонной мстроки для разметки
-  const htmlStringOfItem = `<div class="timer" id="${selector.selector}">
-      <div class="field">
-        <span class="value" data-value="days">--</span>
-        <span class="label">Days</span>
-      </div>
+const colors = [
+  '#FFFFFF',
+  '#2196F3',
+  '#4CAF50',
+  '#FF9800',
+  '#009688',
+  '#795548',
+];
 
-      <div class="field">
-        <span class="value" data-value="hours">--</span>
-        <span class="label">Hours</span>
-      </div>
+const refs = {
+  startBtn: document.querySelector('button[data-action="start"'),
+  stopBtn: document.querySelector('button[data-action="stop"'),
+  bodyRef: document.querySelector('body'),
+};
 
-      <div class="field">
-        <span class="value" data-value="mins">--</span>
-        <span class="label">Minutes</span>
-      </div>
+let savedIndex = []; // переменная для хранения предыдущего индекса цвета
 
-      <div class="field">
-        <span class="value" data-value="secs">--</span>
-        <span class="label">Seconds</span>
-      </div>
-    </div>`;
+//Функционал переключателя
+const swither = {
+  isActive: false, //метка активности кнопки
 
-  //Добавление разметки
-  const ul = document.querySelector('body');
-  ul.insertAdjacentHTML('afterbegin', htmlStringOfItem);
-
-  // Определение ссылок
-  const refs = {};
-
-  const parentNode = document.getElementById(selector.selector);
-  const selectedById = parentNode.querySelectorAll('.value');
-  for (let i = 0; i < selectedById.length; i++) {
-    if (selectedById[i].dataset.value === 'days') {
-      refs.daysRef = selectedById[i];
-    } else if (selectedById[i].dataset.value === 'hours') {
-      refs.hoursRef = selectedById[i];
-    } else if (selectedById[i].dataset.value === 'mins') {
-      refs.minsRef = selectedById[i];
-    } else if (selectedById[i].dataset.value === 'secs') {
-      refs.secsRef = selectedById[i];
+  //функционал кнопки старт
+  start() {
+    if (this.isActive) {
+      return;
     }
-  }
 
-  // Функционал таймера
-
-  function timer() {
-    const timerFunctional = setInterval(() => {
-      const startTime = Date.now();
-      const deltaTime = selector.targetDate - startTime;
-      updateClockface(deltaTime);
+    this.isActive = true;
+    this.colorSwitch = setInterval(() => {
+      updateBackgroundColor();
     }, 1000);
-  }
-
-  function updateClockface(time) {
-    const days = Math.floor(time / (1000 * 60 * 60 * 24));
-
-    const hours = pad(
-      Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-    );
-
-    const mins = pad(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
-
-    const secs = pad(Math.floor((time % (1000 * 60)) / 1000));
-
-    refs.daysRef.textContent = days;
-    refs.hoursRef.textContent = hours;
-    refs.minsRef.textContent = mins;
-    refs.secsRef.textContent = secs;
-
-    //Функционал отрисовки множественного числа Day-Days
-
-    if (days == 1) {
-      refs.daysRef.nextElementSibling.textContent = 'Day';
-    } else {
-      refs.daysRef.nextElementSibling.textContent = 'Days';
-    }
-
-    if (hours == 1) {
-      refs.hoursRef.nextElementSibling.textContent = 'Hour';
-    } else {
-      refs.hoursRef.nextElementSibling.textContent = 'Hours';
-    }
-
-    if (mins == 1) {
-      refs.minsRef.nextElementSibling.textContent = 'Minute';
-    } else {
-      refs.minsRef.nextElementSibling.textContent = 'Minutes';
-    }
-
-    if (secs == 1) {
-      refs.secsRef.nextElementSibling.textContent = 'Second';
-    } else {
-      refs.secsRef.nextElementSibling.textContent = 'Seconds';
-    }
-  }
-  function pad(value) {
-    return String(value).padStart(2, '0');
-  }
-  timer();
+  },
+  //функционал кнопки стоп
+  stop() {
+    clearInterval(this.colorSwitch);
+    this.isActive = false;
+    //Для сброса фона при остановке - раскомментировать строку ниже
+    //refs.bodyRef.style.backgroundColor = null;
+  },
+};
+//Привязка к интерфейсу
+refs.startBtn.addEventListener('click', swither.start.bind(swither));
+refs.stopBtn.addEventListener('click', swither.stop.bind(swither));
+//Функционал обновления цвета по случайному идентификатору цвета
+function updateBackgroundColor() {
+  const indexOfColor = checkNumber();
+  refs.bodyRef.style.backgroundColor = colors[indexOfColor];
+  savedIndex = indexOfColor; //Сохранение индекса текущего цвета для последующей проверки
 }
 
-// Создание таймеров
-const timer1 = new CountdownTimer({
-  selector: '#timer-1',
-  targetDate: new Date('aug 17, 2019'),
-});
-
-const timer2 = new CountdownTimer({
-  selector: '#timer-2',
-  targetDate: new Date('Jul 18, 2020'),
-});
-const timer3 = new CountdownTimer({
-  selector: '#timer-3',
-  targetDate: new Date('Jul 17, 2025'),
-});
+//В задании указано, что цвет должен менятся каждую секунду. В случае, если цвет совпадает с предыдущим то изменение фона не произойдет и интервал увеличится
+// Функционал генерации случайного числа с проверкой на совпадение с предыдущим числом
+function checkNumber() {
+  //генератор случайных чисел
+  const randomIntegerFromInterval = (min, max) => {
+    const currentIndex = Math.floor(Math.random() * (max - min + 1) + min);
+    return currentIndex;
+  };
+  //функционал проверки на совпадения
+  let currentIndexOfColor = randomIntegerFromInterval(0, colors.length - 1);
+  while (currentIndexOfColor === savedIndex) {
+    currentIndexOfColor = randomIntegerFromInterval(0, colors.length - 1);
+  }
+  return currentIndexOfColor;
+}
